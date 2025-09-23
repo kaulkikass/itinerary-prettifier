@@ -1,7 +1,11 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,6 +114,9 @@ public class Main {
         processedText = replaceIataWithCity(processedText, cityNameMap);
         processedText = replaceIataWithAirport(processedText, airportNameMap);
         processedText = replaceIcaoWithAirport(processedText, airportNameMap);
+        processedText = replaceDates(processedText);
+        processedText = replaceTimes12(processedText);
+        processedText = replaceTimes24(processedText);
         processedText = trimWhiteSpace(processedText);
 
 
@@ -188,8 +195,87 @@ public class Main {
         return result.toString();
     }
 
+    //3 helper methods for replacing time and date
+    public static String replaceDates(String input) {
+        //".*?" makes it stop at the first ")"
+        Pattern pattern = Pattern.compile("D\\((.*?)\\)");
+        Matcher matcher = pattern.matcher(input);
+        StringBuffer result = new StringBuffer();
+
+        while (matcher.find()) {
+            String iso = matcher.group(1);
+            String replacement;
+            try {
+                OffsetDateTime dateTime = OffsetDateTime.parse(iso, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                DateTimeFormatter format = DateTimeFormatter.ofPattern("dd MMM yyyy");
+                replacement = dateTime.format(format);
+            } catch (DateTimeParseException e) {
+                replacement = matcher.group(0);
+            }
+            matcher.appendReplacement(result, replacement);
+        }
+        matcher.appendTail(result);
+        return result.toString();
+    }
+
+    public static String replaceTimes12(String input) {
+        Pattern pattern = Pattern.compile("T12\\((.*?)\\)");
+        Matcher matcher = pattern.matcher(input);
+        StringBuffer result = new StringBuffer();
+
+        while (matcher.find()) {
+            String iso = matcher.group(1);
+            String replacement;
+            try {
+                OffsetDateTime dateTime = OffsetDateTime.parse(iso, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("hh:mma");
+                String timePart = dateTime.format(timeFormat);
+                String offsetPart = formatOffset(dateTime);
+                replacement = timePart + " (" + offsetPart + ")";
+            } catch (DateTimeParseException e) {
+                replacement = matcher.group(0);
+            }
+            matcher.appendReplacement(result, replacement);
+        }
+        matcher.appendTail(result);
+        return result.toString();
+    }
+
+    public static String replaceTimes24(String input) {
+        Pattern pattern = Pattern.compile("T24\\((.*?)\\)");
+        Matcher matcher = pattern.matcher(input);
+        StringBuffer result = new StringBuffer();
+
+        while (matcher.find()) {
+            String iso = matcher.group(1);
+            String replacement;
+            try {
+                OffsetDateTime dateTime = OffsetDateTime.parse(iso, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm");
+                String timePart = dateTime.format(timeFormat);
+                String offsetPart = formatOffset(dateTime);
+                replacement = timePart + " (" + offsetPart + ")";
+            } catch (DateTimeParseException e) {
+                replacement = matcher.group(0);
+            }
+            matcher.appendReplacement(result, replacement);
+        }
+        matcher.appendTail(result);
+        return result.toString();
+    }
+
+    //Helper method for formatting Offset time
+    private static String formatOffset(OffsetDateTime dateTime) {
+        String offset = dateTime.getOffset().getId();
+        if (offset.equals("Z")) {
+            return "+00:00";
+        } else {
+            return offset;
+        }
+    }
+
     //Helper method for normalizing and trimming whitespace
-    public static String trimWhiteSpace(String input) {
+    private static String trimWhiteSpace(String input) {
         //turn whitespace characters to \n
         input = input.replaceAll("[\\v\\f\\r]", "\n");
         //trim 3 or more blank lines to 2
