@@ -23,6 +23,7 @@ public class Main {
         System.out.println(input);
         } catch (IOException e) {
             System.out.println("Input not found");
+            return;
         }
 
         //Airport lookup CSV 
@@ -74,12 +75,14 @@ public class Main {
                 //Validate each data row size
                 if (dataFields.size() != headerMap.size()) {
                     System.out.println("Airport lookup malformed");
+                    return;
                 }
 
                 //Validate no empty fields of data
                 for (String field : dataFields) {
                     if (field.trim().isEmpty()) {
                         System.out.println("Airport lookup malformed");
+                        return;
                     }
                 }
 
@@ -98,14 +101,25 @@ public class Main {
             }
 
         } catch (IOException e) {
-            System.out.println("error");
+            System.out.println("Airport lookup not found");
+            return;
         }
 
-        //Processing the input with 4 regex functions. ORDER IS IMPORTANT!
+        //Processing the input text to output text format. ORDER IS IMPORTANT!
         String processedText = replaceIcaoWithCity(input, cityNameMap);
         processedText = replaceIataWithCity(processedText, cityNameMap);
         processedText = replaceIataWithAirport(processedText, airportNameMap);
         processedText = replaceIcaoWithAirport(processedText, airportNameMap);
+        processedText = trimWhiteSpace(processedText);
+
+
+        //Write processed text to output file
+        try {
+            Files.write(Path.of("output.txt"), processedText.getBytes());
+        } catch (IOException e) {
+            System.out.println("Couldn't write output");
+            return;
+        }
     }
 
     //REPLACING INPUT TEXT WITH CORRESPONDING VALUES FROM MAP
@@ -172,5 +186,14 @@ public class Main {
         matcher.appendTail(result);
 
         return result.toString();
+    }
+
+    //Helper method for normalizing and trimming whitespace
+    public static String trimWhiteSpace(String input) {
+        //turn whitespace characters to \n
+        input = input.replaceAll("[\\v\\f\\r]", "\n");
+        //trim 3 or more blank lines to 2
+        input = input.replaceAll("\n{3,}", "\n\n");
+        return input;
     }
 }

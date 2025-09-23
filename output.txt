@@ -1,0 +1,6 @@
+Flight from Los Angeles International Airport to Heathrow Airport\r\r\v
+
+Departure Date: D(2023-11-02T14:30-07:00)\v\v
+
+\f\f
+Arrival Time: T12(2023-11-03T09:15+01:00)
