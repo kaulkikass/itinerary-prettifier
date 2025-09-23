@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Main {
+public class Prettifier {
     public static void main(String[] args) {
         //Help flag check
         if (args.length == 1 && args[0].equals("-h")) {

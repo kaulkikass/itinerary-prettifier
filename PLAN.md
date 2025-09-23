@@ -1,25 +1,25 @@
 Itinerary-prettifier to-do list
 
-[ ] File input/output
-    [ ] Read input.txt to string
-    [ ] Write string back to output.txt
+[x] File input/output
+    [x] Read input.txt to string
+    [x] Write string back to output.txt
     
-[ ] Airports CSV
-    [ ] Load airports CSV
-    [ ] Parse CSV data to map
+[x] Airports CSV
+    [x] Load airports CSV
+    [x] Parse CSV data to map
 
-[ ] Airport code replacement
-    [ ] Replace #iata codes with names
-    [ ] Replace #icao codes with names
-    [ ] Bad codes unchanged
+[x] Airport code replacement
+    [x] Replace #iata codes with names
+    [x] Replace #icao codes with names
+    [x] Bad codes unchanged
 
-[ ] Formatting dates and times
-    [ ] Replace date
-    [ ] Replace T12
-    [ ] Replace T24
+[x] Formatting dates and times
+    [x] Replace date
+    [x] Replace T12
+    [x] Replace T24
 
-[ ] Remove whitespace 
-    [ ] Convert to new line
-    [ ] 3+ new lines to 2 lines
+[x] Remove whitespace 
+    [x] Convert to new line
+    [x] 3+ new lines to 2 lines
 
-[ ] Errors
+[x] Errors
