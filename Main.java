@@ -14,6 +14,21 @@ import java.util.regex.Pattern;
 
 public class Main {
     public static void main(String[] args) {
+        //Help flag check
+        if (args.length == 1 && args[0].equals("-h")) {
+            printUsage();
+            return;
+        }
+        if (args.length != 3) {
+            printUsage();
+            return;
+        }
+
+        //Save the file arguments as paths
+        Path inputPath = Path.of(args[0]);
+        Path outputPath = Path.of(args[1]);
+        Path csvPath = Path.of(args[2]);
+
         String input = null;
         //Make 2 maps. 1 for iata/icao code > airport name lookup, other for iata/icao code > city lookup
         Map<String, String> airportNameMap = new HashMap<>();
@@ -22,7 +37,7 @@ public class Main {
 
         //Reading input to list, converting to string
         try {
-        List<String> lines = Files.readAllLines(Path.of("input.txt"));
+        List<String> lines = Files.readAllLines(inputPath);
         input = String.join("\n", lines);
         System.out.println(input);
         } catch (IOException e) {
@@ -33,7 +48,7 @@ public class Main {
         //Airport lookup CSV 
         try {
             //Reading the airport CSV line by line to a string
-            List<String> lines = Files.readAllLines(Path.of("airports_lookup.csv"));
+            List<String> lines = Files.readAllLines(csvPath);
             //Saving the first line as header string array
             String[] headerColumns = lines.get(0).split(",");
             
@@ -122,7 +137,7 @@ public class Main {
 
         //Write processed text to output file
         try {
-            Files.write(Path.of("output.txt"), processedText.getBytes());
+            Files.write(outputPath, processedText.getBytes());
         } catch (IOException e) {
             System.out.println("Couldn't write output");
             return;
@@ -282,4 +297,11 @@ public class Main {
         input = input.replaceAll("\n{3,}", "\n\n");
         return input;
     }
+
+    //Usage message print
+    private static void printUsage() {
+        System.out.println("itinerary usage:");
+        System.out.println("$ java Prettifier.java ./input.txt /.output.txt /airport-lookup.csv");
+    }
+    
 }
