@@ -1,0 +1,3 @@
+icao_code,municipality,coordinates,iata_code,name,iso_country
+KLAX,Los Angeles,"-118.407997, 33.942501",LAX,"Los Angeles International, Airport",US
+EGLL,London,"-0.4543,51.47",LHR,London Heathrow Airport,GB

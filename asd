@@ -1,4 +1,4 @@
-Flight from Los Angeles International, Airport to London Heathrow Airport
+Flight from Los Angeles International Airport to London Heathrow Airport
 
 Departure Date: 02 Nov 2023
 
