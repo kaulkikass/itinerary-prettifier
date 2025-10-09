@@ -30,9 +30,8 @@ public class Prettifier {
         Path csvPath = Path.of(args[2]);
 
         String input = null;
-        //Make 2 maps. 1 for iata/icao code > airport name lookup, other for iata/icao code > city lookup
-        Map<String, String> airportNameMap = new HashMap<>();
-        Map<String, String> cityNameMap = new HashMap<>();
+        //Make a map of icao/iata code > airport object
+        Map<String, Airport> airportLookup = new HashMap<>();
 
 
         //Reading input to list, converting to string
@@ -45,7 +44,7 @@ public class Prettifier {
 
         //Load airport data to maps
         try {
-            loadAirports(csvPath, airportNameMap, cityNameMap);
+            loadAirports(csvPath, airportLookup);
         } catch (IOException e) {
             System.out.println("Airport lookup not found");
             return;
@@ -55,7 +54,7 @@ public class Prettifier {
         }
 
         //Write processed text to output file
-        String processedText = processText(input, cityNameMap, airportNameMap);
+        String processedText = processText(input, airportLookup);
 
         try {
             writeOutput(outputPath, processedText);
@@ -67,67 +66,87 @@ public class Prettifier {
 
     //REPLACING INPUT TEXT WITH CORRESPONDING VALUES FROM MAP
     //4 regex helper functions to replace input text values with wanted customer-friendly values from airport lookup maps
-    public static String replaceIataWithCity(String input, Map<String, String> cityNameMap) {
+    public static String replaceIataWithCity(String input, Map<String, Airport> airportLookup) {
         Pattern pattern = Pattern.compile("\\*#([A-Z]{3})");
         Matcher matcher = pattern.matcher(input);
         StringBuffer result = new StringBuffer();
 
         while (matcher.find()) {
             String code = matcher.group(1);
-            String replacement = cityNameMap.getOrDefault(code, matcher.group(0));
+            Airport airport = airportLookup.get(code);
+            String replacement;
+            if (airport != null) {
+                replacement = airport.getMunicipality();
+            } else {
+                replacement = matcher.group(0);
+            }
             matcher.appendReplacement(result, replacement);
         }
 
         matcher.appendTail(result);
-
         return result.toString();
     }
 
-    public static String replaceIcaoWithCity(String input, Map<String, String> cityNameMap) {
+    public static String replaceIcaoWithCity(String input, Map<String, Airport> airportLookup) {
         Pattern pattern = Pattern.compile("\\*##([A-Z]{4})");
         Matcher matcher = pattern.matcher(input);
         StringBuffer result = new StringBuffer();
 
         while (matcher.find()) {
             String code = matcher.group(1);
-            String replacement = cityNameMap.getOrDefault(code, matcher.group(0));
+            Airport airport = airportLookup.get(code);
+            String replacement; 
+            if (airport != null) {
+                replacement = airport.getMunicipality();
+            } else {
+                replacement = matcher.group(0);
+            }
             matcher.appendReplacement(result, replacement);
         }
 
         matcher.appendTail(result);
-
         return result.toString();
     }
 
-    public static String replaceIataWithAirport(String input, Map<String, String> airportNameMap) {
+    public static String replaceIataWithAirport(String input, Map<String, Airport> airportLookup) {
         Pattern pattern = Pattern.compile("#([A-Z]{3})");
         Matcher matcher = pattern.matcher(input);
         StringBuffer result = new StringBuffer();
 
         while (matcher.find()) {
             String code = matcher.group(1);
-            String replacement = airportNameMap.getOrDefault(code, matcher.group(0));
+            Airport airport = airportLookup.get(code);
+            String replacement;
+            if (airport != null) {
+                replacement = airport.getName();
+            } else {
+                replacement = matcher.group(0);
+            }
             matcher.appendReplacement(result, replacement);
         }
 
         matcher.appendTail(result);
-
         return result.toString();
     }
 
-    public static String replaceIcaoWithAirport(String input, Map<String, String> airportNameMap) {
+    public static String replaceIcaoWithAirport(String input, Map<String, Airport> airportLookup) {
         Pattern pattern = Pattern.compile("##([A-Z]{4})");
         Matcher matcher = pattern.matcher(input);
         StringBuffer result = new StringBuffer();
 
         while (matcher.find()) {
             String code = matcher.group(1);
-            String replacement = airportNameMap.getOrDefault(code, matcher.group(0));
+            Airport airport = airportLookup.get(code);
+            String replacement;
+            if (airport != null) {
+                replacement = airport.getName();
+            } else {
+                replacement = matcher.group(0);
+            }
             matcher.appendReplacement(result, replacement);
         }
 
         matcher.appendTail(result);
-
         return result.toString();
     }
 
@@ -226,13 +245,13 @@ public class Prettifier {
     }
     
     //Method for input text processing
-    private static String processText(String input, Map<String, String> cityNameMap, Map<String, String> airportNameMap) {
+    private static String processText(String input, Map<String, Airport> airportLookup) {
         //Processing the input text to output text format. ORDER IS IMPORTANT!
         String result = input;
-        result = replaceIcaoWithCity(result, cityNameMap);
-        result = replaceIataWithCity(result, cityNameMap);
-        result = replaceIataWithAirport(result, airportNameMap);
-        result = replaceIcaoWithAirport(result, airportNameMap);
+        result = replaceIcaoWithCity(result, airportLookup);
+        result = replaceIataWithCity(result, airportLookup);
+        result = replaceIataWithAirport(result, airportLookup);
+        result = replaceIcaoWithAirport(result, airportLookup);
         result = replaceDates(result);
         result = replaceTimes12(result);
         result = replaceTimes24(result);
@@ -251,8 +270,8 @@ public class Prettifier {
         Files.write(outputPath, text.getBytes());
     }
 
-    //Method for filling the airport data we need to existing maps
-    private static void loadAirports(Path csvPath, Map<String, String> airportNameMap, Map<String, String> cityNameMap) 
+    //Method for filling the airport lookup map with codes and their corresponding airport data objects
+    private static void loadAirports(Path csvPath, Map<String, Airport> airportLookup) 
     throws IOException, IllegalArgumentException {
 
         //Reading the airport CSV line by line to a string
@@ -261,6 +280,7 @@ public class Prettifier {
         if (lines.size() < 2) {
             throw new IllegalArgumentException("Airport lookup malformed");
         }
+
         //Saving the first line as header string array
         String[] headerColumns = lines.get(0).split(",");
         
@@ -283,25 +303,13 @@ public class Prettifier {
         int cityIndex = headerMap.get("municipality");
         int iataIndex = headerMap.get("iata_code");
         int icaoIndex = headerMap.get("icao_code");
+        int countryIndex = headerMap.get("iso_country");
+        int coordinatesIndex = headerMap.get("coordinates");
         
-        //Read the data rows
+        //Read and parse the data rows
         for (int i = 1; i < lines.size(); i++) {
-            List<String> dataFields = new ArrayList<>();
-            boolean quotes = false;
-            StringBuilder currentField = new StringBuilder();
             String dataRow = lines.get(i);
-            for (int j = 0; j < dataRow.length(); j++) {
-                char currentChar = dataRow.charAt(j);
-                if (currentChar == '"') {
-                    quotes = !quotes;
-                } else if (currentChar == ',' && !quotes) {
-                    dataFields.add(currentField.toString());
-                    currentField.setLength(0);
-                } else {
-                    currentField.append(currentChar);
-                }
-            }
-            dataFields.add(currentField.toString());
+            List<String> dataFields = parseCsvLine(dataRow);
 
             //Validate each data row size
             if (dataFields.size() != headerMap.size()) {
@@ -315,24 +323,42 @@ public class Prettifier {
                 }
             }
 
-            //Save value of each data field in correct header field
-            String name = dataFields.get(nameIndex);
-            String city = dataFields.get(cityIndex);
-            String iata = dataFields.get(iataIndex);
-            String icao = dataFields.get(icaoIndex);
+            //Creating a new Airport object with data from the row
+            Airport airport = new Airport(
+                dataFields.get(nameIndex),
+                dataFields.get(cityIndex),
+                dataFields.get(iataIndex),
+                dataFields.get(icaoIndex),
+                dataFields.get(countryIndex),
+                dataFields.get(coordinatesIndex)
+            );
 
-            //Save each iata and icao code with corresponding city and airport name
-            airportNameMap.put(iata, name);
-            airportNameMap.put(icao, name);
-            cityNameMap.put(iata, city);
-            cityNameMap.put(icao, city);
-
+            //Save airport object by iata and icao codes
+            airportLookup.put(airport.getIata(), airport);
+            airportLookup.put(airport.getIcao(), airport);
         }
     }
 
-    //Method for splitting csv file line with quote handling
+    //Method for splitting a single line with quote handling
     private static List<String> parseCsvLine(String line) {
-        List<String> fields = new ArrayList<>();
+        List<String> dataFields = new ArrayList<>();
+        boolean quotes = false;
+        StringBuilder currentField = new StringBuilder();
+
+        for (int i = 0; i < line.length(); i++) {
+            char currentChar = line.charAt(i);
+            if (currentChar == '"') {
+                quotes = !quotes;
+            } else if (currentChar == ',' && !quotes) {
+                dataFields.add(currentField.toString().trim());
+                currentField.setLength(0);
+            } else {
+                currentField.append(currentChar);
+            }
+        }
+        dataFields.add(currentField.toString().trim());
+        return dataFields;
+
     }
 
 }
