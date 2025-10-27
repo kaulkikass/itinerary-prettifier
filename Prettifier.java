@@ -10,7 +10,8 @@ public class Prettifier {
             printUsage();
             return;
         }
-        if (args.length != 3) {
+        //Atleast 3 arguments and not more than 4 check
+        if (args.length < 3 || args.length > 4) {
             printUsage();
             return;
         }
@@ -19,6 +20,17 @@ public class Prettifier {
         Path inputPath = Path.of(args[0]);
         Path outputPath = Path.of(args[1]);
         Path csvPath = Path.of(args[2]);
+
+        //Optional details flag check
+        boolean details = false;
+        if (args.length == 4) {
+            if (args[3].equals("--details")) {
+                details = true;
+            } else {
+                printUsage();
+                return;
+            }
+        }
 
         String input = null;
         
@@ -45,7 +57,7 @@ public class Prettifier {
         }
 
         //Processing the text
-        String processedText = TextFormatter.processText(input, airportLookup);
+        String processedText = TextFormatter.processText(input, airportLookup, details);
         //Write processed text to output file
         try {
             FileUtils.writeOutput(outputPath, processedText);
@@ -58,6 +70,9 @@ public class Prettifier {
     //Usage message print
     private static void printUsage() {
         System.out.println("itinerary usage:");
+        System.out.println("Default usage:");
         System.out.println("$ java Prettifier.java ./input.txt ./output.txt /airport-lookup.csv");
+        System.out.println("Bonus usage(iso country):");
+        System.out.println("$ java Prettifier.java ./input.txt ./output.txt /airport-lookup.csv --details");
     }
 }

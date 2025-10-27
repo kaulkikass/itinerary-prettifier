@@ -8,13 +8,13 @@ import java.util.regex.Pattern;
 public class TextFormatter {
 
     //Method for input text processing
-    public static String processText(String input, Map<String, Airport> airportLookup) {
+    public static String processText(String input, Map<String, Airport> airportLookup, boolean details) {
         //Processing the input text to output text format. ORDER IS IMPORTANT!
         String result = input;
-        result = replaceIcaoWithCity(result, airportLookup);
-        result = replaceIataWithCity(result, airportLookup);
-        result = replaceIataWithAirport(result, airportLookup);
-        result = replaceIcaoWithAirport(result, airportLookup);
+        result = replaceIcaoWithCity(result, airportLookup,details);
+        result = replaceIataWithCity(result, airportLookup, details);
+        result = replaceIataWithAirport(result, airportLookup, details);
+        result = replaceIcaoWithAirport(result, airportLookup, details);
         result = replaceDates(result);
         result = replaceTimes12(result);
         result = replaceTimes24(result);
@@ -24,7 +24,7 @@ public class TextFormatter {
 
     //REPLACING INPUT TEXT WITH CORRESPONDING VALUES FROM MAP
     //4 regex helper functions to replace input text values with wanted customer-friendly values from airport lookup maps
-    private static String replaceIataWithCity(String input, Map<String, Airport> airportLookup) {
+    private static String replaceIataWithCity(String input, Map<String, Airport> airportLookup, boolean details) {
         Pattern pattern = Pattern.compile("\\*#([A-Z]{3})");
         Matcher matcher = pattern.matcher(input);
         StringBuffer result = new StringBuffer();
@@ -34,7 +34,8 @@ public class TextFormatter {
             Airport airport = airportLookup.get(code);
             String replacement;
             if (airport != null) {
-                replacement = airport.getMunicipality();
+                String base = airport.getMunicipality();
+                replacement = displayName(base, airport, details);
             } else {
                 replacement = matcher.group(0);
             }
@@ -45,7 +46,7 @@ public class TextFormatter {
         return result.toString();
     }
 
-    private static String replaceIcaoWithCity(String input, Map<String, Airport> airportLookup) {
+    private static String replaceIcaoWithCity(String input, Map<String, Airport> airportLookup, boolean details) {
         Pattern pattern = Pattern.compile("\\*##([A-Z]{4})");
         Matcher matcher = pattern.matcher(input);
         StringBuffer result = new StringBuffer();
@@ -55,7 +56,8 @@ public class TextFormatter {
             Airport airport = airportLookup.get(code);
             String replacement; 
             if (airport != null) {
-                replacement = airport.getMunicipality();
+                String base = airport.getMunicipality();
+                replacement = displayName(base, airport, details);
             } else {
                 replacement = matcher.group(0);
             }
@@ -66,7 +68,7 @@ public class TextFormatter {
         return result.toString();
     }
 
-    private static String replaceIataWithAirport(String input, Map<String, Airport> airportLookup) {
+    private static String replaceIataWithAirport(String input, Map<String, Airport> airportLookup, boolean details) {
         Pattern pattern = Pattern.compile("#([A-Z]{3})");
         Matcher matcher = pattern.matcher(input);
         StringBuffer result = new StringBuffer();
@@ -76,7 +78,8 @@ public class TextFormatter {
             Airport airport = airportLookup.get(code);
             String replacement;
             if (airport != null) {
-                replacement = airport.getName();
+                String base = airport.getName();
+                replacement = displayName(base, airport, details);
             } else {
                 replacement = matcher.group(0);
             }
@@ -87,7 +90,7 @@ public class TextFormatter {
         return result.toString();
     }
 
-    private static String replaceIcaoWithAirport(String input, Map<String, Airport> airportLookup) {
+    private static String replaceIcaoWithAirport(String input, Map<String, Airport> airportLookup, boolean details) {
         Pattern pattern = Pattern.compile("##([A-Z]{4})");
         Matcher matcher = pattern.matcher(input);
         StringBuffer result = new StringBuffer();
@@ -97,7 +100,8 @@ public class TextFormatter {
             Airport airport = airportLookup.get(code);
             String replacement;
             if (airport != null) {
-                replacement = airport.getName();
+                String base = airport.getName();
+                replacement = displayName(base, airport, details);
             } else {
                 replacement = matcher.group(0);
             }
@@ -194,5 +198,13 @@ public class TextFormatter {
         //trim 3 or more blank lines to 2
         input = input.replaceAll("\n{3,}", "\n\n");
         return input;
+    }
+
+    //Helper for displaying the airport with or without country
+    private static String displayName (String base, Airport a, boolean details) {
+        if (!details) {
+            return base;
+        }
+        return base + " (" + a.getIsoCountry() + ")";
     }
 }
