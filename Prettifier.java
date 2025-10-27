@@ -65,6 +65,7 @@ public class Prettifier {
             System.out.println("Output writing failed");
             return;
         }
+        System.out.println(TextFormatter.ansiFormatting(processedText));
     }
 
     //Usage message print

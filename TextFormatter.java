@@ -7,6 +7,37 @@ import java.util.regex.Pattern;
 
 public class TextFormatter {
 
+    //ANSI 
+    private static final String RESET = "\u001B[0m";
+    private static final String BOLD = "\u001B[1m";
+    private static final String UL = "\u001B[4m";
+    private static final String CYAN = "\u001B[36m";
+    private static final String YELLOW = "\u001B[33m";
+    private static final String GREEN = "\u001B[32m";
+
+    //Method for ANSI styling
+    public static String ansiFormatting(String text) {
+    String out = text;
+
+    //Timezone offsets (+/-HH:MM)
+    out = out.replaceAll("\\((\\+|-)\\d{2}:\\d{2}\\)", CYAN + BOLD + "$0" + RESET);
+
+    //12-hour times. Example "03:30AM"
+    out = out.replaceAll("\\b(0?[1-9]|1[0-2]):[0-5]\\d[AP]M\\b", YELLOW + "$0" + RESET);
+
+    //24-hour times. Example "17:54"
+    out = out.replaceAll("\\b([01]\\d|2[0-3]):[0-5]\\d\\b", YELLOW + "$0" + RESET);
+
+    //Dates. Example "11 Apr 2002"
+    out = out.replaceAll("\\b\\d{2} [A-Za-z]{3} \\d{4}\\b", UL + GREEN + "$0" + RESET);
+
+    //Bold "from" and "to"
+    out = out.replaceAll("\\bfrom\\b", BOLD + "from" + RESET);
+    out = out.replaceAll("\\bto\\b", BOLD + "to" + RESET);
+
+    return out;
+    }
+
     //Method for input text processing
     public static String processText(String input, Map<String, Airport> airportLookup, boolean details) {
         //Processing the input text to output text format. ORDER IS IMPORTANT!
