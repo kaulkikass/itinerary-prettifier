@@ -19,17 +19,20 @@ public class TextFormatter {
     public static String ansiFormatting(String text) {
     String out = text;
 
+    //Add UTC to offsets
+    out = out.replaceAll("\\(([+-]\\d{2}:[0-5]\\d)\\)", "(UTC$1)");
+
     //Timezone offsets (+/-HH:MM)
-    out = out.replaceAll("\\((\\+|-)\\d{2}:\\d{2}\\)", CYAN + BOLD + "$0" + RESET);
+    out = out.replaceAll("(\\(UTC[+-]\\d{2}:[0-5]\\d\\))", CYAN + BOLD + "$1" + RESET);
 
     //12-hour times. Example "03:30AM"
-    out = out.replaceAll("\\b(0?[1-9]|1[0-2]):[0-5]\\d[AP]M\\b", YELLOW + "$0" + RESET);
+    out = out.replaceAll("((?<!\\()\\b(0?[1-9]|1[0-2]):[0-5]\\d[AP]M\\b(?!\\)))", YELLOW + "$1" + RESET);
 
     //24-hour times. Example "17:54"
-    out = out.replaceAll("\\b([01]\\d|2[0-3]):[0-5]\\d\\b", YELLOW + "$0" + RESET);
+    out = out.replaceAll("((?<!\\()\\b([01]\\d|2[0-3]):[0-5]\\d\\b(?!\\)))", YELLOW + "$1" + RESET);
 
     //Dates. Example "11 Apr 2002"
-    out = out.replaceAll("\\b\\d{2} [A-Za-z]{3} \\d{4}\\b", UL + GREEN + "$0" + RESET);
+    out = out.replaceAll("(\\b\\d{2} [A-Za-z]{3} \\d{4}\\b)", UL + GREEN + "$1" + RESET);
 
     //Bold "from" and "to"
     out = out.replaceAll("\\bfrom\\b", BOLD + "from" + RESET);
